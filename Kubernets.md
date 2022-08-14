@@ -113,12 +113,11 @@ Because of its versatility, Kubernetes can solve the same problems in different 
 
 The following table shows a classification for some of the most popular Kubertes distributions:
 
-|                                    | Big Scale                                                | Small Scale                                                 |   |   |   |   |   |   |   |
-|------------------------------------|----------------------------------------------------------|-------------------------------------------------------------|---|---|---|---|---|---|---|
-| Self-Managed - Local               |                                                          | minikube, CodeReady Containers, Microk8s, Docker Kubernetes |   |   |   |   |   |   |   |
-| Self-Managed-On Premises / Hybrid  | Red Hat OpenShift, VMWare Tanzu, Rancher                 |                                                             |   |   |   |   |   |   |   |
-| Kubernetes-as-a-Service - On Cloud | OpenShift Dedicated,
-Google Container Engine, Amazon EKS | Developer Sandbox                                           |   |   |   |   |   |   |   |
+|                                    | Big Scale                                                | Small Scale                                                 |
+|------------------------------------|----------------------------------------------------------|-------------------------------------------------------------|
+| Self-Managed - Local               |                                                          | minikube, CodeReady Containers, Microk8s, Docker Kubernetes |
+| Self-Managed-On Premises / Hybrid  | Red Hat OpenShift, VMWare Tanzu, Rancher                 |                                                             |
+| Kubernetes-as-a-Service - On Cloud | OpenShift Dedicated, Google Container Engine, Amazon EKS | Developer Sandbox                                           |
 
 It's also important to mention that each distribution provides different approaches (or none) for adding capabilities to Kubernetes. Following is a comparison summary of Kubertes features.
 
