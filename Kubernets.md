@@ -132,7 +132,7 @@ It's also important to mention that each distribution provides different approac
 
 # Running minikube on Docker Desktop
 1. Download the latest release from the github [link](https://github.com/kubernetes/minikube/releases).
-2. Download the virtual box from the following [link](https://www.virtualbox.org/).
+2. [Get started with Docker](https://www.docker.com/get-started/).
 3. Make sure to have virtualization enable in the bios (can be seen if its enabled, or not, in the windows task manager -> performance)
 > OBS: During the process, I got the error: <ins>**Failed to start virtualbox VM. Running "minikube delete" may fix it: creating host: create: precreate: This computer doesn't have VT-X/AMD-v enabled. Enabling it in the BIOS is mandatory**</ins>. This probably occour because of the wls2 that I have running, so the following command was executed as administrator: <ins>minikube start</ins>
 4. Since I have Docker installed, it created an image with root privileges.
