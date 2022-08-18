@@ -180,6 +180,10 @@ You can view the list of minikube maintainers at: https://github.com/kubernetes/
 🌟  The 'ingress' addon is enabled
 ```
 
+# Kuberctl
+The kubectl tool is a Kubernetes command-line tool that allows you to interact with your Kubernetes cluster. It provides an easy way to perform tasks such as creating resources or
+redirecting cluster traffic. The kubectl tool is available for the three main operating systems (Linux, Windows and macOS).
+
 # Installing kuberctl in Windows
 
 1. Create a new folder, such as C:\kube, to use as the destination directory of the kubectl binary download.
