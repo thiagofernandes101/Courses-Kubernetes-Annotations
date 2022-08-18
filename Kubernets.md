@@ -132,11 +132,76 @@ It's also important to mention that each distribution provides different approac
 
 # Running minikube on Docker Desktop
 1. Download the latest release from the github [link](https://github.com/kubernetes/minikube/releases).
+
 2. [Get started with Docker](https://www.docker.com/get-started/).
+
 3. Make sure to have virtualization enable in the bios (can be seen if its enabled, or not, in the windows task manager -> performance)
+
 > OBS: During the process, I got the error: <ins>**Failed to start virtualbox VM. Running "minikube delete" may fix it: creating host: create: precreate: This computer doesn't have VT-X/AMD-v enabled. Enabling it in the BIOS is mandatory**</ins>. This probably occour because of the wls2 that I have running, so the following command was executed as administrator: <ins>minikube start</ins>
+
+``` bash
+minikube start
+
+minikube v1.26.1 on Microsoft Windows 11 Home Single Language 10.0.22000 Build 22000
+✨  Automatically selected the docker driver. Other choices: hyperv, virtualbox, ssh
+📌  Using Docker Desktop driver with root privileges
+👍  Starting control plane node minikube in cluster minikube
+🚜  Pulling base image ...
+    > gcr.io/k8s-minikube/kicbase:  386.61 MiB / 386.61 MiB  100.00% 11.86 MiB
+    > gcr.io/k8s-minikube/kicbase:  0 B [________________________] ?% ? p/s 23s
+🔥  Creating docker container (CPUs=2, Memory=8100MB) ...
+🐳  Preparing Kubernetes v1.24.3 on Docker 20.10.17 ...
+   ▪ Generating certificates and keys ...
+    ▪ Booting up control plane ...
+    ▪ Configuring RBAC rules ...
+🔎  Verifying Kubernetes components...
+    ▪ Using image gcr.io/k8s-minikube/storage-provisioner:v5
+🌟  Enabled addons: storage-provisioner, default-storageclass
+🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+```
+
 4. Since I have Docker installed, it created an image with root privileges.
+
 > OBS: To use virtual box or hyper-v, here are the following commands:
 > - <ins>minikube start --driver=hyperv</ins>
 > - <ins>minikube start --driver=virtualbox</ins>
+
 5. Enable the ingress addon with the following command: <ins>minikube addons enable ingress</ins>
+``` bash
+minikube addons enable ingress
+
+💡  ingress is an addon maintained by Kubernetes. For any concerns contact minikube on GitHub.
+You can view the list of minikube maintainers at: https://github.com/kubernetes/minikube/blob/master/OWNERS
+💡  After the addon is enabled, please run "minikube tunnel" and your ingress resources would be available at "127.0.0.1"
+    ▪ Using image k8s.gcr.io/ingress-nginx/kube-webhook-certgen:v1.1.1
+    ▪ Using image k8s.gcr.io/ingress-nginx/kube-webhook-certgen:v1.1.1
+    ▪ Using image k8s.gcr.io/ingress-nginx/controller:v1.2.1
+🔎  Verifying ingress addon...
+🌟  The 'ingress' addon is enabled
+```
+
+# Installing kuberctl in Windows
+
+1. Create a new folder, such as C:\kube, to use as the destination directory of the kubectl binary download.
+
+2. [Download the latest release of the kubectl binary](https://dl.k8s.io/release/v1.21.0/bin/windows/amd64/kubectl.exe) and save it to the previously created folder. **It isn't mandatory to run the .exe file**
+
+3. Add the downloaded binary file to the windows environment path.
+
+4. Run the command <ins>kubectl version --client</ins> to verify that kubectl has been installed successfully.
+``` bash
+kubectl version --client
+
+Client Version: version.Info{Major:"1", Minor:"24", GitVersion:"v1.24.2", GitCommit:"f66044f4361b9f1f96f0053dd46cb7dce5e990a8", GitTreeState:"clean", BuildDate:"2022-06-15T14:22:29Z", GoVersion:"go1.18.3", Compiler:"gc", Platform:"windows/amd64"}
+Kustomize Version: v4.5.4
+```
+
+5. Donwload the [DO100x-apps](https://github.com/RedHatTraining/DO100x-apps) repository.
+> OBS: The DO100x-apps contains a script that handles all configurations for you under the setup directory. The script you should run depends on your operating system (Linux, macOS or Windows) and the Kubernetes distribution you use (Minikube or the OpenShift Developer Sandbox). If you run the Minikube script, it will configure Minikube to work as a Kubernetes cluster with restricted access. You will only have access to two namespaces. This way, we simulate a real Kubernetes cluster, where usually developers do not have full access.
+
+6. In the DO100x-apps directory, run the command <ins>Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass</ins>. This command allows you to run unsigned PowerShell scripts in your current terminal session.
+
+7. Make sure that OpenSSL is installed and its bin folder path is configured in the environment variables.
+> OBS: Usually, git alread has an executable openssl file. So all it is needed to do is add a new environment variable using the git openssl bin folder path (C:\Program Files\OpenSSL-Win64\bin).
+
+8. Run the command <ins>.\setup\windows\setup.ps1</ins>
