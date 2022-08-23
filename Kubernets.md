@@ -209,3 +209,97 @@ Kustomize Version: v4.5.4
 > OBS: Usually, git alread has an executable openssl file. So all it is needed to do is add a new environment variable using the git openssl bin folder path (C:\Program Files\OpenSSL-Win64\bin).
 
 8. Run the command <ins>.\setup\windows\setup.ps1</ins>
+
+# Running and interacting with an application
+
+As it was mentioned before, Kubernetes does not view a container directly and instead works with the concept of pods as showed at the image below.
+
+![Container view](./Assets/ContainerView.drawio.svg)
+
+In this case, each pod can container multiple containers and one container och ochestration platform contain more than one pod.
+
+With that in mind, to create a pod with an image, the following commands can be executed.
+
+> OBS: Before executing the commands to create an image, make sure the kubectl is configured to use minikube (case not just run <ins>minukube start</ins>) and the kubectl context refers to the user-dev by running <ins>kubectl config set-context --current --namespace=[your user]-dev</ins>
+>
+> In case the namespaces are not know (probably forgotten), then run the command <ins>kubectl config get-contexts</ins>
+>
+> If everything is alright, then the command to show kubernetes pods should show the message that no resources were found in the user namespace
+>
+> ``` bash
+> kubectl get pods
+> No resources found in thiag-dev namespace.
+> ```
+> <br>
+
+<br>
+
+``` bash
+# Create a pod with an image
+kubectl run webserver --image=registry.access.redhat.com/ubi8/httpd-24:1-161
+pod/webserver created
+
+# Confirm the pod is running
+kubectl get pods
+| NAME      | READY  | STATUS   | RESTARTS  | AGE     |
+|-----------|--------|----------|-----------|---------|
+| webserver | 1/1    | Running  | 0         | 111s    |
+
+# Connect to the pod by using kubectl exec
+kubectl exec --stdin --tty webserver -- /bin/bash
+
+# View the contents of the httpd configuration file within the pod
+cat /etc/httpd/conf/httpd.conf
+
+# Disconnect from the pod by using the exit command.
+exit
+```
+
+To create a new pod from a yml file, the following commands can be used as an example.
+
+``` bash
+# Get a yml file base on an image
+# In this case, the content will be created based on the specified image using the command to run a pod
+kubectl run probes --image=quay.io/redhattraining/do100-probes:external --dry-run=client -o yaml
+> apiVersion: v1
+> kind: Pod
+> metadata:
+>   creationTimestamp: null
+>   labels:
+>     run: probes
+>   name: probes
+> spec:
+>   containers:
+>   - image: quay.io/redhattraining/do100-probes:external
+>     name: probes
+>     resources: {}
+>   dnsPolicy: ClusterFirst
+>   restartPolicy: Always
+> status: {}
+
+# Create a file called probes-pod.yml with the generated content (unix commands to write a file are necessary)
+vim probes-pod.yml
+
+# Create a new pod based on a file. In this case, the probes-pod.yml file
+kubectl create -f probes-pod.yml
+
+# Verify that the pod is running
+kubectl get pods
+| NAME      | READY  | STATUS   | RESTARTS  | AGE     |
+|-----------|--------|----------|-----------|---------|
+| probes    | 1/1    | Running  | 0         | 23s     |
+| webserver | 1/1    | Running  | 0         | 37s     |
+```
+
+To modify the metadata.labels.app field of the pod manifest and apply the changes, the following commands can be used.
+
+``` bash
+# Add a new label, for example, in the probes-pod.yml file
+vim probes-pod.yml
+
+# The command below will create a new pod in case it does not exist, or update an existing pod
+kubectl apply -f probes-pod.yml
+
+# Verify the changes by describing a specific pod
+kubectl describe pod probes
+```
