@@ -220,7 +220,7 @@ In this case, each pod can container multiple containers and one container och o
 
 With that in mind, to create a pod with an image, the following commands can be executed.
 
-> OBS: Before executing the commands to create an image, make sure the kubectl is configured to use minikube (case not just run <ins>minukube start</ins>) and the kubectl context refers to the user-dev by running <ins>kubectl config set-context --current --namespace=[your user]-dev</ins>
+> OBS: Before executing the commands to create an image, make sure the kubectl is configured to use minikube (in case it is not just run <ins>minukube start</ins>) and the kubectl context refers to the user-dev by running <ins>kubectl config set-context --current --namespace=[your user]-dev</ins>
 >
 > In case the namespaces are not know (probably forgotten), then run the command <ins>kubectl config get-contexts</ins>
 >
@@ -303,3 +303,59 @@ kubectl apply -f probes-pod.yml
 # Verify the changes by describing a specific pod
 kubectl describe pod probes
 ```
+
+# Deploy managed applications
+
+One of the features of Kubernetes is that it enables developers to use a declarative approach for automatic container life cycle management, in other words, developers can declare what should be the status of the application and Kubernetes will update the container to reach that state.
+
+For that to happen, some basic values must be declared:
+
+- The container images used by the application;
+- The number of instances (replicas) of the application that Kubernetes must run simultaneously;
+- The strategy for updating the replicas when a new version of the application is available.
+
+With this information, Kubernetes deploys the application, keep the number of replicas and terminates or redeploys application containers when the state of the application does not match the declared configuration. Also, it continuously revisits this information and updates the state of the application accordingly.
+
+This behavior enables important features of Kubernetes as a container management platform:
+
+### **Automatic deployment**
+
+- Kubernetes deploys the configured application without manual intervention.
+
+### **Automatic scaling**
+
+- Kubernetes creates as many replicas of the application as requested. If the number of replicas requested increases or decreases, then Kubernetes automatically creates new containers (scales-up) or terminates and automatically spins up a new one to match the expected replica count.
+
+### **Automatic restart**
+
+- If a replica terminates unexpectedly or becomes unresponsive, then Kubernetes deletes the associated container and automatically spins up a new one to match the expected replica count.
+
+### **Automatic rollout**
+
+- When a new version of the application is detected, or a new configuration applies, Kubernetes automatically updates the existing replicas. Kubernetes monitors this rollout process to make sure the application retains the declared number of active replicas.
+
+## Creating a Deployment
+
+A Deployment resource container all the information Kubernetes needs to manage the life cyle of the application's containers.
+
+Using kuberctl is a simple way to create a deployment resource. For that, the following command must be executed.
+
+```bash
+kubectl create deployment [deployment-name] --image [image] --replicas=[number of replicas]
+```
+
+This command creates a deployment resource in which instructs Kubernetes to deploy the number of replicas specified of the application pod and to use the container image.
+
+The get command <ins>get [deployment-name]</ins> retrieve the Deployment resource from Kubernetes.
+
+Also, it is possible to use the <ins>--output yaml<ins> parameter to get detailed information about the resource in the YAML format. Alternatively, it is also possible to use the short <ins>-o yaml</ins> version.
+
+```bash
+kubectl get deployment [deployment-name] -o yaml
+```
+
+The Kubernetes declarative deployment approach enables you to use the GitOps principles, which focuses on a versioned repository, such as git, which stores the deployment configuration.
+
+Following GitOps principles, the Deployment manifest can be stored in YAML or JSON format in the application repository. Then, after the appropriate changes, the Deployment can be created manually or programmatically by using the <ins>kubectl apply -f [deployment-file]</ins> command.
+
+The Deployment resource manifest can also be edited directly from the command line. The <ins>kubectl edit deployment [deployment-name]</ins> command retrieves de Deployment resource and opens it in a local text editor.
