@@ -130,7 +130,7 @@ It's also important to mention that each distribution provides different approac
 | Authentication | Administrator minikube user | Developer used restricted to 2 namespaces |
 | Operators      | OLM add-on. No restrictions | Limited to RHOAS and SErvice Binding      |
 
-# Running minikube on Docker Desktop
+# **Running minikube on Docker Desktop**
 1. Download the latest release from the github [link](https://github.com/kubernetes/minikube/releases).
 
 2. [Get started with Docker](https://www.docker.com/get-started/).
@@ -180,7 +180,7 @@ You can view the list of minikube maintainers at: https://github.com/kubernetes/
 🌟  The 'ingress' addon is enabled
 ```
 
-# Kuberctl
+# **Kuberctl**
 The kubectl tool is a Kubernetes command-line tool that allows you to interact with your Kubernetes cluster. It provides an easy way to perform tasks such as creating resources or
 redirecting cluster traffic. The kubectl tool is available for the three main operating systems (Linux, Windows and macOS).
 
@@ -304,7 +304,7 @@ kubectl apply -f probes-pod.yml
 kubectl describe pod probes
 ```
 
-# Deploy managed applications
+# **Deploy managed applications**
 
 One of the features of Kubernetes is that it enables developers to use a declarative approach for automatic container life cycle management, in other words, developers can declare what should be the status of the application and Kubernetes will update the container to reach that state.
 
@@ -390,11 +390,11 @@ status: #Current status of the deployment. This section is automatically generat
    replicas: 3 #The current number of replicas currently deployed
 ```
 
-## **Replica:**
+## Replica:
 
 The replicas section under the <ins>spec</ins> section (also denoted as <ins>sec.replicas</ins> section) declares the number of expected replicas that Kubernetes should keep running. Kubernetes will continuously review the number of replicas that are running and responsive, and scale accordingly.
 
-## **Deployment strategy:**
+## Deployment strategy:
 
 When the application changes dues to an image change or a configuration change, Kubernetes replaces the old running containers with updated ones. However, just redeploying all replicas at once can lead to problems with the application, such as:
 
@@ -410,7 +410,7 @@ Kubernetes terminates and deploys pods progressively. This strategy defines a ma
 ### **2. Recreate:**
 This strategy means that no issues are expected to impact the application, so Kubernetes terminates all replicas and recreates them on a best effort basis.
 
-## **Template:**
+## Template:
 When Kubernetes deploys new pods, it needs the exact manifest to create the pod. The <ins>spec.template.spec</ins> sectinon holds exactly the same structure as a Pod manifest. Kubernetes uses this section to create new pods as needed.
 
 The following entries in the template deserve special attention:
@@ -419,7 +419,7 @@ The following entries in the template deserve special attention:
 
 - Kubernetes uses the <ins>spec.template.spec.containers.name</ins> entry as a prefix for the names of the pods it creates.
 
-## **Labels:**
+## Labels:
 Labels are key-value pairs assigned in resource manifests. Both developers and Kubernetes use labels to identify sets of groupes resources, such as resources belonging to the same application or environment. Depending on the position inside the Deployment, labels have a different meaning:
 
 - **metada.labels:**  Labels applied directly to the manifest, in this case the Deployment resource. Objects matching these labels with the <ins>kubectl get king --selector="key=value"</ins> For example, <ins>kubectl get deployment --selector="app=myapp"</ins> returns all deployments with a label app=myapp in the <ins>metadata.labels</ins> section.
@@ -428,7 +428,7 @@ Labels are key-value pairs assigned in resource manifests. Both developers and K
 
 - **spec.template.metadata.labels:** Like the rest of the template, it defines how Jubernetes creates new pods using this Deployment. Kubernetes will label all the pods created by this Deployment resource with these values.
 
-## **Example deploying managed applications**
+## Example deploying managed applications
 
 - The deployment image will be the container image quay.io/redhattraining/do100-versioned-hello:v1.0-external.
 
