@@ -17,7 +17,7 @@ Futhermore, beyond improving efficiency, elasticity and reusability of hosted ap
 
 The image specification defines the format for the bundle of files and metadata that form a container image. When you build a container image compliant with the OCI standard, you can use any OCI-compliant container engine to execute the contained application. There are many container engines available to manage and execute containers, including Rocket, Drawbridge, LXC, Docker, and Podman.
 
-he following are other major advantages to using containers:
+The following are other major advantages to using containers:
 
 ### **Low hardware footprint**
 - Containers use OS-internal features to create an isolated environment where resources are
@@ -54,7 +54,7 @@ service.
 
 In short, containers are an ideal approach when using microservices for application development which each service is encapsulated in a lightweight and reliable container environment that can be deployed to a production or development environment. The collection of containerized services required by an application can be hosted on a single machine, removing the need to manage a machine for each service.
 
-In contras, many applications are not well suited for a containerized environment. For example, application accessing low level hardware information, such as memory, file systems, and devices may be unreliable dua to container limitations.
+In contrast, many applications are not well suited for a containerized environment. For example, application accessing low level hardware information, such as memory, file systems, and devices may be unreliable due to container limitations.
 
 ## **Limitations of containers**
 When using containers in a production environment, enterprises often require the following capabilities:
@@ -359,3 +359,163 @@ The Kubernetes declarative deployment approach enables you to use the GitOps pri
 Following GitOps principles, the Deployment manifest can be stored in YAML or JSON format in the application repository. Then, after the appropriate changes, the Deployment can be created manually or programmatically by using the <ins>kubectl apply -f [deployment-file]</ins> command.
 
 The Deployment resource manifest can also be edited directly from the command line. The <ins>kubectl edit deployment [deployment-name]</ins> command retrieves de Deployment resource and opens it in a local text editor.
+
+## **Deployment schema**
+
+The following depicts the main entries in a Deployment manifest:
+
+``` yml
+apiVersion: apps/v1
+kind: Deployment # Manifest kind identifies the resource type.
+metadata: # Manifest metadata. Include deployment name and labels.
+  labels:
+  app: versioned-hello
+  name: versioned-hello
+spec: # Deployment specification contains deployment configuration
+  replicas: 3 # Number of desired replicas of the container
+  selector:
+    matchLabels:
+      app: versioned-hello
+  strategy:
+      type: RollingUpdate # Deployment strategy to use when updating pods
+  template:
+    metadata:
+      labels:
+        app: versioned-hello
+    spec: #Includes a list of pod definitions for each new container created by the deployment as well as other fields to control container management
+      containers:
+      - image: quay.io/redhattraining/versioned-hello:v1.14 DO100B-K1.22-en-2-7067502Chapter 1 | Deploying ManagedApplications #Container image used to create new containers
+          name: versioned-hello
+status: #Current status of the deployment. This section is automatically generated and updated by Kubernetes
+   replicas: 3 #The current number of replicas currently deployed
+```
+
+## **Replica:**
+
+The replicas section under the <ins>spec</ins> section (also denoted as <ins>sec.replicas</ins> section) declares the number of expected replicas that Kubernetes should keep running. Kubernetes will continuously review the number of replicas that are running and responsive, and scale accordingly.
+
+## **Deployment strategy:**
+
+When the application changes dues to an image change or a configuration change, Kubernetes replaces the old running containers with updated ones. However, just redeploying all replicas at once can lead to problems with the application, such as:
+
+1. Leaving the application with too few running replicas.
+2. Creating too many replicas and leading to an overcommitment of resources.
+3. Rendering the application unavailable if new version is faulty.
+
+To avoid this issues, Kubernetes defines two strategies:
+
+### **1. RollingUpdate:**
+Kubernetes terminates and deploys pods progressively. This strategy defines a maximum amount of pods unavailable anytime. It defines the difference between the abailable pods and the desired available replicas. The RollingUpdate strategy also defines an amount of pods deployed at any time over the number of desired replicas. Both values default to 25% of the desired replicas.
+
+### **2. Recreate:**
+This strategy means that no issues are expected to impact the application, so Kubernetes terminates all replicas and recreates them on a best effort basis.
+
+## **Template:**
+When Kubernetes deploys new pods, it needs the exact manifest to create the pod. The <ins>spec.template.spec</ins> sectinon holds exactly the same structure as a Pod manifest. Kubernetes uses this section to create new pods as needed.
+
+The following entries in the template deserve special attention:
+
+- The <ins>spec.template.spec.container.image</ins> entry declares the image (or images) Kubernetes will deploy in the pods manages by this Deployment.
+
+- Kubernetes uses the <ins>spec.template.spec.containers.name</ins> entry as a prefix for the names of the pods it creates.
+
+## **Labels:**
+Labels are key-value pairs assigned in resource manifests. Both developers and Kubernetes use labels to identify sets of groupes resources, such as resources belonging to the same application or environment. Depending on the position inside the Deployment, labels have a different meaning:
+
+- **metada.labels:**  Labels applied directly to the manifest, in this case the Deployment resource. Objects matching these labels with the <ins>kubectl get king --selector="key=value"</ins> For example, <ins>kubectl get deployment --selector="app=myapp"</ins> returns all deployments with a label app=myapp in the <ins>metadata.labels</ins> section.
+
+- **spec.selector.matchLabels.selector:** Determine what pods are under the control of the Deployment resource. Even if some pods in the cluster are not deployed via this Deployment, if they match the labels in this section then they will count as replicas and follow the rules defined in this Deployment manifest.
+
+- **spec.template.metadata.labels:** Like the rest of the template, it defines how Jubernetes creates new pods using this Deployment. Kubernetes will label all the pods created by this Deployment resource with these values.
+
+## **Example deploying managed applications**
+
+- The deployment image will be the container image quay.io/redhattraining/do100-versioned-hello:v1.0-external.
+
+1. Create a default deployment that starts one replica of the do100-versioned-hello application and review the deployment was successful.
+
+```bash
+kubectl create deployment do100-versioned-hello --image quay.io/redhattraining/do100-versioned-hello:v1.0-external
+> deployment.apps/do100-versioned-hello created
+
+kubectl get deployment do100-versioned-hello
+> NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+> do100-versioned-hello   1/1     1            1           2m2s
+
+kubectl describe deployment do100-versioned-hello
+> Name:                   do100-versioned-hello
+> Namespace:              thiag-dev
+> CreationTimestamp:      Tue, 04 Oct 2022 19:54:28 -0300
+> Labels:                 app=do100-versioned-hello
+> Annotations:            deployment.kubernetes.io/revision: 1
+> Selector:               app=do100-versioned-hello
+> Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+> StrategyType:           RollingUpdate
+> MinReadySeconds:        0
+> RollingUpdateStrategy:  25% max unavailable, 25% max surge
+> Pod Template:
+>   Labels:  app=do100-versioned-hello
+>   Containers:
+>    do100-versioned-hello:
+>     Image:        quay.io/redhattraining/do100-versioned-hello:v1.0-external
+>     Port:         <none>
+>     Host Port:    <none>
+>     Environment:  <none>
+>     Mounts:       <none>
+>   Volumes:        <none>
+> Conditions:
+>   Type           Status  Reason
+>   ----           ------  ------
+>   Available      True    MinimumReplicasAvailable
+>   Progressing    True    NewReplicaSetAvailable
+> OldReplicaSets:  <none>
+> NewReplicaSet:   do100-versioned-hello-5544cf98b (1/1 replicas created)
+> Events:
+>   Type    Reason             Age   From                   Message
+>   ----    ------             ----  ----                   -------
+>   Normal  ScalingReplicaSet  3m5s  deployment-controller  Scaled up replica set do100-versioned-hello-5544cf98b to 1
+```
+
+2. Enable high availability by increasing the number of replicas to two.
+
+```bash
+kubectl scale deployment do100-versioned-hello --replicas=2
+> deployment.apps/do100-versioned-hello scaled
+
+kubectl get pods -w
+> NAME                                    READY   STATUS    RESTARTS   AGE
+> do100-versioned-hello-5544cf98b-d4wcd   1/1     Running   0          33s
+> do100-versioned-hello-5544cf98b-jftb9   1/1     Running   0          11m
+```
+
+3. Verify high availability features in Kubernetes. Kubernetes must ensure that two replicas are available at all times. Terminate one pod and observe how Kubernetes creates a new pod to ensure the desired number of replicas.
+
+```bash
+kubectl delete pod do100-versioned-hello-5544cf98b-d4wcd
+> pod "do100-versioned-hello-5544cf98b-d4wcd" deleted
+
+kubectl get pods -w
+> NAME                                    READY   STATUS    RESTARTS   AGE
+> do100-versioned-hello-5544cf98b-jftb9   1/1     Running   0          13m
+> do100-versioned-hello-5544cf98b-x8bh9   1/1     Running   0          5s
+```
+
+4. Deploy a new version of the application and observe the default deployment rollingUpdate strategy.
+
+```bash
+# Look for the image: quay.io/redhattraining/do100-versionedhello:v1.0-external entry and change the image tag from v1.0-external to v1.1-external. Save the changes and exit the editor.
+kubectl edit deployment do100-versioned-hello
+> deployment.apps/do100-versioned-hello edited
+
+kubectl get pods -w 
+> NAME                                     READY   STATUS    RESTARTS   AGE
+> do100-versioned-hello-68f449dddc-2hfzw   1/1     Running   0          2m31s
+> do100-versioned-hello-68f449dddc-4v6mz   1/1     Running   0          2m23s
+```
+
+5. Delte the deployment to clean the cluster. Kubernetes automatically deletes the associated pods.
+
+```bash
+kubectl delete deployment do100-versioned-hello
+> deployment.apps "do100-versioned-hello" deleted
+```
