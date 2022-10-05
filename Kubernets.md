@@ -334,7 +334,7 @@ This behavior enables important features of Kubernetes as a container management
 
 - When a new version of the application is detected, or a new configuration applies, Kubernetes automatically updates the existing replicas. Kubernetes monitors this rollout process to make sure the application retains the declared number of active replicas.
 
-## Creating a Deployment
+# Creating a Deployment
 
 A Deployment resource container all the information Kubernetes needs to manage the life cyle of the application's containers.
 
@@ -360,7 +360,7 @@ Following GitOps principles, the Deployment manifest can be stored in YAML or JS
 
 The Deployment resource manifest can also be edited directly from the command line. The <ins>kubectl edit deployment [deployment-name]</ins> command retrieves de Deployment resource and opens it in a local text editor.
 
-## **Deployment schema**
+# Deployment schema
 
 The following depicts the main entries in a Deployment manifest:
 
@@ -390,11 +390,11 @@ status: #Current status of the deployment. This section is automatically generat
    replicas: 3 #The current number of replicas currently deployed
 ```
 
-## Replica:
+# Replica:
 
 The replicas section under the <ins>spec</ins> section (also denoted as <ins>sec.replicas</ins> section) declares the number of expected replicas that Kubernetes should keep running. Kubernetes will continuously review the number of replicas that are running and responsive, and scale accordingly.
 
-## Deployment strategy:
+# Deployment strategy:
 
 When the application changes dues to an image change or a configuration change, Kubernetes replaces the old running containers with updated ones. However, just redeploying all replicas at once can lead to problems with the application, such as:
 
@@ -405,12 +405,12 @@ When the application changes dues to an image change or a configuration change, 
 To avoid this issues, Kubernetes defines two strategies:
 
 ### **1. RollingUpdate:**
-Kubernetes terminates and deploys pods progressively. This strategy defines a maximum amount of pods unavailable anytime. It defines the difference between the abailable pods and the desired available replicas. The RollingUpdate strategy also defines an amount of pods deployed at any time over the number of desired replicas. Both values default to 25% of the desired replicas.
+Kubernetes terminates and deploys pods progressively. This strategy defines a maximum amount of pods unavailable anytime. It defines the difference between the available pods and the desired available replicas. The RollingUpdate strategy also defines an amount of pods deployed at any time over the number of desired replicas. Both values default to 25% of the desired replicas.
 
 ### **2. Recreate:**
 This strategy means that no issues are expected to impact the application, so Kubernetes terminates all replicas and recreates them on a best effort basis.
 
-## Template:
+# Template:
 When Kubernetes deploys new pods, it needs the exact manifest to create the pod. The <ins>spec.template.spec</ins> sectinon holds exactly the same structure as a Pod manifest. Kubernetes uses this section to create new pods as needed.
 
 The following entries in the template deserve special attention:
@@ -419,7 +419,7 @@ The following entries in the template deserve special attention:
 
 - Kubernetes uses the <ins>spec.template.spec.containers.name</ins> entry as a prefix for the names of the pods it creates.
 
-## Labels:
+# Labels:
 Labels are key-value pairs assigned in resource manifests. Both developers and Kubernetes use labels to identify sets of groupes resources, such as resources belonging to the same application or environment. Depending on the position inside the Deployment, labels have a different meaning:
 
 - **metada.labels:**  Labels applied directly to the manifest, in this case the Deployment resource. Objects matching these labels with the <ins>kubectl get king --selector="key=value"</ins> For example, <ins>kubectl get deployment --selector="app=myapp"</ins> returns all deployments with a label app=myapp in the <ins>metadata.labels</ins> section.
@@ -428,7 +428,7 @@ Labels are key-value pairs assigned in resource manifests. Both developers and K
 
 - **spec.template.metadata.labels:** Like the rest of the template, it defines how Jubernetes creates new pods using this Deployment. Kubernetes will label all the pods created by this Deployment resource with these values.
 
-## Example deploying managed applications
+# Example deploying managed applications
 
 - The deployment image will be the container image quay.io/redhattraining/do100-versioned-hello:v1.0-external.
 
