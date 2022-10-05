@@ -1,19 +1,19 @@
 # **Containers**
 Is a set of one or more processes that are isolated from the rest of the system.
 
-In traditional software applications, there usually are dependencies on other libraries, configuration files, or services that are provided by the runtime environment, which is a physical host or virtual machine and those dependencies mentioned earlier are installed as part of the host.
+In traditional software applications, there are usually dependencies on other libraries, configuration files, or services that are provided by the runtime environment, which is a physical host or virtual machine and those dependencies mentioned earlier are installed as part of the host.
 
-The major drawback of those environments is the possibility to break the software application everytime there is a need to update the runtime environment.
+The major drawback of those environments is the possibility to break the software application every time there is a need to update the runtime environment.
 
-Futhermore, applications must be stopped before updating the associated dependencies. To minimize downtime, organiztions use complex systems to provide high availability. Maintaning multiple applications on a single host becomes cumbersome, since any update, as previously mentioned, has the potential to brak one of applications.
+Furthermore, applications must be stopped before updating the associated dependencies. To minimize downtime, organizations use complex systems to provide high availability. Maintaining multiple applications on a single host becomes cumbersome, since any update, as previously mentioned, has the potential to break one of the applications.
 
-The image below shows the difference between container and operation systems.
+The image below shows the difference between container and operating systems.
 
-![Container and operation system differences](./Assets/ContainerVersusOperatingSystemsDifferences.drawio.svg)
+![Container and operating system differences](./Assets/ContainerVersusOperatingSystemsDifferences.drawio.svg)
 
-Using containers provides many of the benefits as virtual machines, such as security, storage and network isolation, demanding fewer hardware resources. Also they are quick to start and to terminate and isolate the libraries and the runtime resources, such as cpu and storage, and minimize the impact of os updates.
+Using containers provides many of the benefits as virtual machines, such as security, storage and network isolation, demanding fewer hardware resources. Also, they are quick to start and to terminate and isolate the libraries and the runtime resources, such as CPU and storage, and minimize the impact of OS updates.
 
-Futhermore, beyond improving efficiency, elasticity and reusability of hosted applications, container usage improves application portability. The Open Container Initiative (OCI) provides a set of industry standards that define a container runtime specification and a container image specification. 
+Furthermore, beyond improving efficiency, elasticity and reusability of hosted applications, container usage improves application portability. The Open Container Initiative (OCI) provides a set of industry standards that define a container runtime specification and a container image specification. 
 
 The image specification defines the format for the bundle of files and metadata that form a container image. When you build a container image compliant with the OCI standard, you can use any OCI-compliant container engine to execute the contained application. There are many container engines available to manage and execute containers, including Rocket, Drawbridge, LXC, Docker, and Podman.
 
@@ -52,14 +52,14 @@ containers, there is no longer a need to maintain separate production and develo
 database servers. A single container image is used to create instances of the database
 service.
 
-In short, containers are an ideal approach when using microservices for application development which each service is encapsulated in a lightweight and reliable container environment that can be deployed to a production or development environment. The collection of containerized services required by an application can be hosted on a single machine, removing the need to manage a machine for each service.
+In short, containers are an ideal approach when using microservices for application development, in which each service is encapsulated in a lightweight and reliable container environment that can be deployed to a production or development environment. The collection of containerized services required by an application can be hosted on a single machine, removing the need to manage a machine for each service.
 
 In contrast, many applications are not well suited for a containerized environment. For example, application accessing low level hardware information, such as memory, file systems, and devices may be unreliable due to container limitations.
 
 ## **Limitations of containers**
 When using containers in a production environment, enterprises often require the following capabilities:
 
-- Easy communication between a large number of services;
+- Easy communication between numerous services;
 - Resources limits on applications;
 - Ability to respond to application usage spikes by increasing or decreasing replicas;
 - Gradual rollout of a new release to different users.
@@ -67,13 +67,13 @@ When using containers in a production environment, enterprises often require the
 Enterprises often require a container orchestration technology because container runtimes, by themselves, do not adequately address the above requirements.
 
 # **Kubernetes**
-Kubernetes is a container ochestration platform that simplifies the deployment, management, and scaling of containerized applications.
+Kubernetes is a container orchestration platform that simplifies the deployment, management, and scaling of containerized applications.
 
-A pod is the smallest manageable unit in Kubernets and consists of, at least, one container that is used by the container ochestration to manage the containers and their resource limits as a single unit.
+A pod is the smallest manageable unit in Kubernetes and consists of, at least, one container that is used by the container orchestration to manage the containers and their resource limits as a single unit.
 
 Kubernetes offers the following features on top of a container engine:
 
-### **Service discovery and load balacing**
+### **Service discovery and load balancing**
 - Kubernetes enables inter-service communication by assigning a single DNS entry to each set
 of containers. This way, the requesting service only needs to know the target's DNS name,
 allowing the cluster to change the container's location and IP address. This permits load-
@@ -96,14 +96,14 @@ version of the application.
 - You can manage the configuration settings and secrets of your applications without rebuilding
 containers. Configuration maps store these settings in a way that decouples them from the
 pods and containers using them. Application secrets can include any configuration setting
-that must be kept private, such as user names, passwords, and service endpoints.
+that must be kept private, such as usernames, passwords, and service endpoints.
 
 ### **Operators**
 - Operators are packaged Kubernetes applications that bring the knowledge of application
 lifecycles into the Kubernetes cluster. Applications packaged as Operators use the Kubernetes
 API to update the cluster's state by reacting to changes in the application state.
 
-Because of its versatility, Kubernetes can solve the same problems in different ways depending on need and opinions evolving, because of this, into differents distributions based on:
+Because of its versatility, Kubernetes can solve the same problems in different ways depending on need and opinions evolving, because of this, into different distributions based on:
 
 - <ins>The target size of the cluster</ins>: from small single-node clusters to large scale clusters of hundreds of thousands of nodes.
 
@@ -111,7 +111,7 @@ Because of its versatility, Kubernetes can solve the same problems in different 
 
 - <ins>The ownership of the management</ins>: self-managed clusters versus Kubernetes-as-a-service.
 
-The following table shows a classification for some of the most popular Kubertes distributions:
+The following table shows a classification for some of the most popular Kubernetes distributions:
 
 |                                    | Big Scale                                                | Small Scale                                                 |
 |------------------------------------|----------------------------------------------------------|-------------------------------------------------------------|
@@ -119,7 +119,7 @@ The following table shows a classification for some of the most popular Kubertes
 | Self-Managed-On Premises / Hybrid  | Red Hat OpenShift, VMWare Tanzu, Rancher                 |                                                             |
 | Kubernetes-as-a-Service - On Cloud | OpenShift Dedicated, Google Container Engine, Amazon EKS | Developer Sandbox                                           |
 
-It's also important to mention that each distribution provides different approaches (or none) for adding capabilities to Kubernetes. Following is a comparison summary of Kubertes features.
+It's also important to mention that each distribution provides different approaches (or none) for adding capabilities to Kubernetes. Following is a comparison summary of Kubernetes features.
 
 |                | minikube                    | Developer Sandbox                         |
 |----------------|-----------------------------|-------------------------------------------|
@@ -131,11 +131,11 @@ It's also important to mention that each distribution provides different approac
 | Operators      | OLM add-on. No restrictions | Limited to RHOAS and SErvice Binding      |
 
 # **Running minikube on Docker Desktop**
-1. Download the latest release from the github [link](https://github.com/kubernetes/minikube/releases).
+1. Download the latest release from the GitHub [link](https://github.com/kubernetes/minikube/releases).
 
 2. [Get started with Docker](https://www.docker.com/get-started/).
 
-3. Make sure to have virtualization enable in the bios (can be seen if its enabled, or not, in the windows task manager -> performance)
+3. Make sure to have virtualization enable in the bios (can be seen if it's enabled, or not, in the windows task manager → performance)
 
 > OBS: During the process, I got the error: <ins>**Failed to start virtualbox VM. Running "minikube delete" may fix it: creating host: create: precreate: This computer doesn't have VT-X/AMD-v enabled. Enabling it in the BIOS is mandatory**</ins>. This probably occour because of the wls2 that I have running, so the following command was executed as administrator: <ins>minikube start</ins>
 
@@ -184,13 +184,13 @@ You can view the list of minikube maintainers at: https://github.com/kubernetes/
 The kubectl tool is a Kubernetes command-line tool that allows you to interact with your Kubernetes cluster. It provides an easy way to perform tasks such as creating resources or
 redirecting cluster traffic. The kubectl tool is available for the three main operating systems (Linux, Windows and macOS).
 
-# Installing kuberctl in Windows
+# Installing kuberctl on Windows
 
 1. Create a new folder, such as C:\kube, to use as the destination directory of the kubectl binary download.
 
 2. [Download the latest release of the kubectl binary](https://dl.k8s.io/release/v1.21.0/bin/windows/amd64/kubectl.exe) and save it to the previously created folder. **It isn't mandatory to run the .exe file**
 
-3. Add the downloaded binary file to the windows environment path.
+3. Add the downloaded binary file to the Windows environment path.
 
 4. Run the command <ins>kubectl version --client</ins> to verify that kubectl has been installed successfully.
 ``` bash
@@ -200,12 +200,12 @@ Client Version: version.Info{Major:"1", Minor:"24", GitVersion:"v1.24.2", GitCom
 Kustomize Version: v4.5.4
 ```
 
-5. Donwload the [DO100x-apps](https://github.com/RedHatTraining/DO100x-apps) repository.
+5. Download the [DO100x-apps](https://github.com/RedHatTraining/DO100x-apps) repository.
 > OBS: The DO100x-apps contains a script that handles all configurations for you under the setup directory. The script you should run depends on your operating system (Linux, macOS or Windows) and the Kubernetes distribution you use (Minikube or the OpenShift Developer Sandbox). If you run the Minikube script, it will configure Minikube to work as a Kubernetes cluster with restricted access. You will only have access to two namespaces. This way, we simulate a real Kubernetes cluster, where usually developers do not have full access.
 
 6. In the DO100x-apps directory, run the command <ins>Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass</ins>. This command allows you to run unsigned PowerShell scripts in your current terminal session.
 
-7. Make sure that OpenSSL is installed and its bin folder path is configured in the environment variables.
+7. Make sure that OpenSSL is installed, and its bin folder path is configured in the environment variables.
 > OBS: Usually, git alread has an executable openssl file. So all it is needed to do is add a new environment variable using the git openssl bin folder path (C:\Program Files\OpenSSL-Win64\bin).
 
 8. Run the command <ins>.\setup\windows\setup.ps1</ins>
@@ -216,7 +216,7 @@ As it was mentioned before, Kubernetes does not view a container directly and in
 
 ![Container view](./Assets/ContainerView.drawio.svg)
 
-In this case, each pod can container multiple containers and one container och ochestration platform contain more than one pod.
+In this case, each pod can container multiple containers and one container och orchestration platform contain more than one pod.
 
 With that in mind, to create a pod with an image, the following commands can be executed.
 
@@ -336,7 +336,7 @@ This behavior enables important features of Kubernetes as a container management
 
 # Creating a Deployment
 
-A Deployment resource container all the information Kubernetes needs to manage the life cyle of the application's containers.
+A Deployment resource container, all the information Kubernetes needs to manage the life cycle of the application's containers.
 
 Using kuberctl is a simple way to create a deployment resource. For that, the following command must be executed.
 
@@ -364,7 +364,7 @@ The Deployment resource manifest can also be edited directly from the command li
 
 The following depicts the main entries in a Deployment manifest:
 
-``` yml
+``` yaml
 apiVersion: apps/v1
 kind: Deployment # Manifest kind identifies the resource type.
 metadata: # Manifest metadata. Include deployment name and labels.
@@ -399,7 +399,7 @@ The replicas section under the <ins>spec</ins> section (also denoted as <ins>sec
 When the application changes dues to an image change or a configuration change, Kubernetes replaces the old running containers with updated ones. However, just redeploying all replicas at once can lead to problems with the application, such as:
 
 1. Leaving the application with too few running replicas.
-2. Creating too many replicas and leading to an overcommitment of resources.
+2. Creating too many replicas and leading to an over commitment of resources.
 3. Rendering the application unavailable if new version is faulty.
 
 To avoid this issues, Kubernetes defines two strategies:
@@ -411,7 +411,7 @@ Kubernetes terminates and deploys pods progressively. This strategy defines a ma
 This strategy means that no issues are expected to impact the application, so Kubernetes terminates all replicas and recreates them on a best effort basis.
 
 # Template:
-When Kubernetes deploys new pods, it needs the exact manifest to create the pod. The <ins>spec.template.spec</ins> sectinon holds exactly the same structure as a Pod manifest. Kubernetes uses this section to create new pods as needed.
+When Kubernetes deploys new pods, it needs the exact manifest to create the pod. The <ins>spec.template.spec</ins> section holds exactly the same structure as a Pod manifest. Kubernetes uses this section to create new pods as needed.
 
 The following entries in the template deserve special attention:
 
@@ -420,13 +420,13 @@ The following entries in the template deserve special attention:
 - Kubernetes uses the <ins>spec.template.spec.containers.name</ins> entry as a prefix for the names of the pods it creates.
 
 # Labels:
-Labels are key-value pairs assigned in resource manifests. Both developers and Kubernetes use labels to identify sets of groupes resources, such as resources belonging to the same application or environment. Depending on the position inside the Deployment, labels have a different meaning:
+Labels are key-value pairs assigned in resource manifests. Both developers and Kubernetes use labels to identify sets of grouped resources, such as resources belonging to the same application or environment. Depending on the position inside the Deployment, labels have a different meaning:
 
-- **metada.labels:**  Labels applied directly to the manifest, in this case the Deployment resource. Objects matching these labels with the <ins>kubectl get king --selector="key=value"</ins> For example, <ins>kubectl get deployment --selector="app=myapp"</ins> returns all deployments with a label app=myapp in the <ins>metadata.labels</ins> section.
+- **metada.labels:**  Labels applied directly to the manifest, in this case the Deployment resource. Objects matching these labels with the <ins>kubectl get king --selector="key=value"</ins> For example, <ins>kubectl get deployment --selector="app=myapp"</ins> returns all deployments with a label app=myapp in the <ins>metadata.labels</ins> section.
 
-- **spec.selector.matchLabels.selector:** Determine what pods are under the control of the Deployment resource. Even if some pods in the cluster are not deployed via this Deployment, if they match the labels in this section then they will count as replicas and follow the rules defined in this Deployment manifest.
+- **spec.selector.matchLabels.selector:** Determine what pods are under the control of the Deployment resource. Even if some pods in the cluster are not deployed via this Deployment, if they match the labels in this section, then they will count as replicas and follow the rules defined in this Deployment manifest.
 
-- **spec.template.metadata.labels:** Like the rest of the template, it defines how Jubernetes creates new pods using this Deployment. Kubernetes will label all the pods created by this Deployment resource with these values.
+- **spec.template.metadata.labels:** Like the rest of the template, it defines how Kubernetes creates new pods using this Deployment. Kubernetes will label all the pods created by this Deployment resource with these values.
 
 # Example deploying managed applications
 
@@ -495,9 +495,9 @@ kubectl delete pod do100-versioned-hello-5544cf98b-d4wcd
 > pod "do100-versioned-hello-5544cf98b-d4wcd" deleted
 
 kubectl get pods -w
-> NAME                                    READY   STATUS    RESTARTS   AGE
-> do100-versioned-hello-5544cf98b-jftb9   1/1     Running   0          13m
-> do100-versioned-hello-5544cf98b-x8bh9   1/1     Running   0          5s
+> NAME                                    READY   STATUS    RESTARTS   AGE
+> do100-versioned-hello-5544cf98b-jftb9   1/1     Running   0          13m
+> do100-versioned-hello-5544cf98b-x8bh9   1/1     Running   0          5s
 ```
 
 4. Deploy a new version of the application and observe the default deployment rollingUpdate strategy.
@@ -508,14 +508,43 @@ kubectl edit deployment do100-versioned-hello
 > deployment.apps/do100-versioned-hello edited
 
 kubectl get pods -w 
-> NAME                                     READY   STATUS    RESTARTS   AGE
-> do100-versioned-hello-68f449dddc-2hfzw   1/1     Running   0          2m31s
-> do100-versioned-hello-68f449dddc-4v6mz   1/1     Running   0          2m23s
+> NAME                                     READY   STATUS    RESTARTS   AGE
+> do100-versioned-hello-68f449dddc-2hfzw   1/1     Running   0          2m31s
+> do100-versioned-hello-68f449dddc-4v6mz   1/1     Running   0          2m23s
 ```
 
-5. Delte the deployment to clean the cluster. Kubernetes automatically deletes the associated pods.
+5. Delete the deployment to clean the cluster. Kubernetes automatically deletes the associated pods.
 
 ```bash
 kubectl delete deployment do100-versioned-hello
 > deployment.apps "do100-versioned-hello" deleted
 ```
+
+# **Exposing applications for external access**
+When pods are created, they are assigned an IP address, which can be used to access the pod from anywhere within the Kubernetes cluster. Containers inside a pod share the same network space, which means that, within the pod, containers can communicate with each other by using the locahost address.
+
+A Kubernetes cluster might be split across different nodes. A node is a physical machine where resources run. A cluster is a logical view of set nodes. These nodes are different machines, but they work together as a logical unit. This makes it easier to work with different machines at the same time because you can simply deploy resources to the cluster and not to individual nodes.
+
+![Kubernetes cluster](./Assets/Kubernetes%20cluster.png)
+
+However, in a real world environment, deployments are performed on a daily basis and this means that pods are constantly created and destroyed (the pods of the older version are removed, and new pods are allocated for the newer version).
+
+At the same time, applications usually have several replicas and traffic is split across the replicas, ensuring that no single replica is overworked. This is called <ins>load-balancing</ins>.
+
+In both use cases, the problem is the same: there is a need to reach the pods, regardless of the machine where they are located. To solve this, Kubernetes introduces the concept of <ins>Service</ins>.
+
+A Service is an abstraction that defines the access to a set of pods. By using a service, there is no need to access pods directly through their private IP addresses. Instead, a service targets several pods based on certain criteria, for example a label, and forwards any requests to one of the pods matching that criteria.
+
+![Load-balancing mechanism](./Assets/Load%20balancing%20mechanism.png)
+
+In other words, a service allows grouping pods with a logical relationship allowing to reach them reliably. At the same time, it implements a load-balancing mechanism among the pods that it targets.
+
+This can be exemplified by if there is a need to create three replicas of an application, then the three pods will be created. If a Service is created targeting these three pods, then the service receives any incoming requests, and it routes it to one of them.
+
+By default, a service is given a cluster-internal IP address, which is only valid within the cluster. This type of service is called <ins>ClusterIP</ins>. This means that pods deployed in the cluster can make requests to the service by using the ClusterIP.
+
+The following diagram illustrates the communication between pods and services. For example, Pod 1 uses the ClusterIP of Service 2 to make requests to the service.
+
+![Pods communication using service](./Assets/Pods%20communication%20using%20services.png)
+
+In addiction, NodePort or LoadBalancer can be used to expose the service externally. However, the most common way to expose a service outside the cluster is by using Kubernetes resources called <ins>Ingress</ins>.
