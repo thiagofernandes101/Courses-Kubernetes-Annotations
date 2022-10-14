@@ -548,3 +548,74 @@ The following diagram illustrates the communication between pods and services. F
 ![Pods communication using service](./Assets/Pods%20communication%20using%20services.png)
 
 In addiction, NodePort or LoadBalancer can be used to expose the service externally. However, the most common way to expose a service outside the cluster is by using Kubernetes resources called <ins>Ingress</ins>.
+
+# Creating Kubernetes Services
+When creating a service, it is necessary to define the port that the service will serve on. This port is mapped to a target port inside the port in the pod and if no target port is provided, then the port value is used.
+
+There are two ways to create a service in Kubernetes:
+
+**1. Using kubectl expose:** 
+
+The easiest way to create a service is by using the <ins>kubectl expose</ins> command.
+
+```bash
+kubectl expose deployment deployment-name --port=8081 --name=service-name --target-port=3000
+```
+
+This command creates a service named service-name, which targets deployment <ins>deployment-name</ins>. It listens on port 8081 and it points to port 3000 inside the pod.
+
+With the command <ins>kubectl get service</ins> it is possible to list the services available. The output will provide with information such as the CusterIP (IP only valid within the Kubernetes cluster) and the port used to access the service. A sample output might look like the following:
+> | NAME         	| TYPE      	| CLUSTER-IP    	| EXTERNAL-IP 	| PORT(S)  	| AGE 	|
+> |--------------	|-----------	|---------------	|-------------	|----------	|-----	|
+> | service-name 	| ClusterIP 	| 10.108.68.139 	| <none>      	| 8081/TCP 	| 3s  	|
+
+**2. Applying a manifest:**
+
+An approach in line with the DevOps principles is creating services through a manifest. The following sample creates a service named <ins>nginx-service</ins> and targets any pod with the label <ins>app: nginx</ins>. The service listens for requests in port 8081 and forwards them to port 3000 inside the pod. Because the manifest does not include the type field, it creates a service with type <ins>clusterIP</ins>.
+
+``` yml
+apiVersion: v1
+kind: Service
+metadata:
+ name: nginx-service # Name of the service
+spec:
+ selector: # Labels used to select the target pods
+ app: nginx
+ ports: # Port mapping
+ - protocol: TCP
+ port: 8081 # The port that the service will serve on
+ targetPort: 3000 # The port inside the pod where requests are forwarded
+```
+
+# Discovering Kubernetes Services
+
+A service abstracts the application from knowing the exact location of the pods that are been used, but also there is the need to know the IP of the service to use it from the application. Directly using the IP is a bad idea because if the IP changes in the future, would need to manually update it in the application. To avoid this, Kubernetes provides two ways to discover services:
+
+**1. Environment variables:**
+
+By default, when a service is created, Kubernetes injects some environment variables in pods within the same namespace. These variables follow the pattern:
+
+> SERICE-NAME_VARIABLE-NAME
+
+If there is a services named <ins>nginx-provider</ins>, that generates the following variables (non-exhaustive). Then they would simply need to be injected in the application:
+
+- <ins>NGINX_PROVIDER_SERVICE_HOST</ins>, which contains the IP address of the Service. For example, 10.0.0.11
+- <ins>NGINX_PROVIDER_SERVICE_PORT</ins>, which contains the port where Service listens to. For example, 6379.
+
+However, the application tries to fetch the environment variable only on start-up. This means that, if the value of the variable changes (for example, a service gets a different IP) after the application has started, then your application is not notified and it references an invalid value (the previous IP address of the service). The same happens if the service is created after the application boots-up.
+
+**2. DNS:**
+
+Given the limitations of the Kubernetes built-in environment variables, the preferred way of accessing services from the application is using DNS.
+
+Every service in the cluster is assigned a DNS, which matches with the service's lower cased name. This allows applications to access services using always the same reference. The default FQDN follows the pattern:
+
+> service.namespace.svc.cluster.local
+
+However, it is possible to avoid this long form. The DNS server also resolves the following hosts:
+
+- service.namespace.cluster.local
+- service.namespace
+- service (in this case, Kubernetes expects the service to be in the same namespace)
+
+For example, if there is a service named <ins>nginx-service</ins> that exposes an HTTP endpoint in the default HTTP port (80), then the <ins>http://nginx-service</ins> can be used if the application is in the same namespace as the servce. If the service was in a namespace named <ins>nginx-apps</ins> then you use <ins>http://nginx-service.neginx-apps</ins>.
