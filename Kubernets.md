@@ -619,3 +619,110 @@ However, it is possible to avoid this long form. The DNS server also resolves th
 - service (in this case, Kubernetes expects the service to be in the same namespace)
 
 For example, if there is a service named <ins>nginx-service</ins> that exposes an HTTP endpoint in the default HTTP port (80), then the <ins>http://nginx-service</ins> can be used if the application is in the same namespace as the servce. If the service was in a namespace named <ins>nginx-apps</ins> then you use <ins>http://nginx-service.neginx-apps</ins>.
+
+## Example - Exposing Applications for External Access:
+
+> To illustrate how communication is handled in Kubernetes, two applications will be used.
+> 
+> The name-generator app produces random names that can be consumed in the /random-name endpoint. The email-generator app produces random emails that can be consumed in the /random-email endpoint.
+> 
+> The email-generator app consumes name-generator to include a random name in the emails that it generates.
+
+1. Deploy the name-generator app in the username-dev namespace.
+- Open a command-line terminal. In the DO1000x-app repository, navigate to the name-generator folder.
+
+- Use the kubectl apply command to create a Deployment from the manifest located in the Kubernetes directory. It creates three replicas of the name-generator app by using quay.io/redhattraining/do100-name-generator:v1.0-external image.
+
+``` bash
+kubectl apply -f kubernetes/deployment.yml
+> deployment.apps/name-generator created
+```
+
+- List the deployments to verify it has been created successfully. Use the command kubectl get deployment.
+
+``` bash
+kubectl get deployment
+> NAME             READY   UP-TO-DATE   AVAILABLE   AGE
+> name-generator   3/3     3            3           2m4s
+```
+
+2. Create a Service for the deployment of the name-generator app by using the kubectl expose command.
+
+- Using the deployment name, expose the service at port number 80. The following command creates a service that forwards requests on port 80 for the DNS name name-generator.namespace.local-domain to containers created by the name-generator deployment on port 8080.
+
+``` bash
+kubectl expose deployment name-generator --port=80 --target-port=8080
+> service/name-generator exposed
+```
+
+- List the services to verify that the name-generator service has been created succesfully. Use the command kubectl get service.
+
+``` bash
+kubectl get service
+> NAME             TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+> name-generator   ClusterIP   10.104.140.173   <none>        80/TCP    87s
+```
+
+3. Review the code of the email-generator to see how the request to the name-generator is made. Deploy the app in the username-dev namespace.
+
+- In the DO100x-apps repository, navigate to the email-generator folder.
+
+- In the app directory, open the server.js file. The server.js file is a NodeJS application, which exposes the endpoint /random-email on the 8081 port.
+
+- In the same folder, open the generate-email.js file. The generateEmail method generates a random email by making an HTTP request to the name-generator service.
+
+- The getNameFromExternalService method performs the actual HTTP request. The host, which is the name-generator service name, is defined in the NAME_GENERATOR_URL variable.
+
+- On the command line, return to the email-generator folder.
+
+- Apply the Deployment manifest in the username-dev namespace. It is located in the Kubernetes folder and creates three replicas of the email-generator app by using the quay.io/redhattraining/do100-email-generator:v1.0-external image.
+
+``` bash
+kubectl apply -f kubernetes/deployment.yml
+> deployment.apps/email-generator created
+```
+
+- List the deployment in the namespace to verify it has been created successfully. Use the command kubectl get deployment.
+
+``` bash
+> NAME              READY   UP-TO-DATE   AVAILABLE   AGE
+> email-generator   3/3     3            3           82s
+> name-generator    3/3     3            3           27m
+```
+
+4. Create a service for the deployment of the email-generator app by using a manifest.
+
+- Apply the Service manifest in the username-dev namespace. It is located in the kubernetes folder. Use the kubectl apply command. This command exposes the service in the 80 port and targets port 8081, which is where the email-generator app server.
+
+``` bash
+kubectl expose deployment email-generator --port=80 --target-port=8081
+> service/email-generator exposed
+```
+
+- List the services to verify that the email-generator service has been created successfully. Use the command kubectl get service.
+
+```bash
+kubectl get service
+> NAME              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+> email-generator   ClusterIP   10.111.58.90     <none>        80/TCP    70s
+> name-generator    ClusterIP   10.104.140.173   <none>        80/TCP    23m
+```
+
+5. Verify that everything works properly by making an HTTP request to the email-generator app from the username-stage namespace. The result should contain a name plus some numbers at the end.
+
+- To make a request to the email-generator app from another namespace, it is used the Kubernetes DNS resolution pattern service-name.namespace. In this case, the host is email-generator.username-dev.
+
+- Create a temporary pod that enables a request to the email-generator application. Run the following command, which provides you with a terminal curl.
+
+```bash
+kubectl run -n thiag-stage curl -it --rm --image=registry.access.redhat.com/ubi8/ubi-minimal -- sh
+> If you do not see a command prompt, try pressing enter.
+> sh-4.4# curl http://email-generator.thiag-dev/random-email #make an HTTP request to the email-generator service by using curl. Because the service runs on the default HTTP port (80), you do not need to specify the port. You can also omit the local DNS domain.
+> {"email":"Susan40@host"} #answer
+```
+
+> **Notes**
+> - The command creates a pod named curl in the username-stage (thiag-stage) namespace.
+> - The pod contains one container that uses the registry.access.redhat.com/ubi8/ubi-minimal container image.
+> - After Kubernetes creates the pod, you create an interactive remote shell session into the pod.
+> - Whe you exit out of the interactive session, Kubernetes terminates the pod
