@@ -726,3 +726,72 @@ kubectl run -n thiag-stage curl -it --rm --image=registry.access.redhat.com/ubi8
 > - The pod contains one container that uses the registry.access.redhat.com/ubi8/ubi-minimal container image.
 > - After Kubernetes creates the pod, you create an interactive remote shell session into the pod.
 > - Whe you exit out of the interactive session, Kubernetes terminates the pod
+
+# **Kubernets Ingress and Kubernetes Ingress Controller**
+
+# Kubernetes Ingress
+
+Kubernetes assign IP addresses to pods and services. Pod and service IP addresses are not usually accessible outside of the cluster. Unless prevented by network policies, the Kubernetes cluster typically allows internal communication between pods and services. This internal communication allows application pods to interact with services that are not externally accessible such as database services.
+
+For web application that should be accessible to external users, it must be created a Kubernetes ingress resources. An ingress maps a domain name, or potentially a URL, to an existing service. On its own, the ingress resource does not provide access to the specified host or path. The ingress resource interacts with Kubernetes ingress controller to provide externall access to a service over HTTP or HTTPS.
+
+# kubernetes Ingress Controller
+
+Kubernetes ingress controllers act as load balancers for HTTP and HTTPS requests coming into your cluster. Because ingress controllers can be specific to an evironment, Kubernetes clusters are not configured to use an ingress controller by default.
+
+As a developer, you cannot choose the ingress controller used by your environment, or cannot configure it.
+
+Operations teams will install and configure an ingress controller appropriate to their environment. This includes configuring the ingress controller based on the networking characteristics of your environment. Most cloud providers and Kubernetes distributions implement their own ingress controllers, tailored for their products and network environments.
+
+Local and self-managed Kubernetes distributions tend to use ingress controllers offered by open source projects, network vendors or sample ingress controllers provided by Kubernetes.
+
+# Ingress resource configuration
+
+One of the main things that must be specified in your ingress resource configuration is the host name used to access the application. This host name is part of the cluster configuration as it comes defined by factors external to the cluster, such as netwrok characteristics and DNS services. The operations team must provide the cluster host name to developers.
+
+Production deployments must have DNS records pointing to the Kubernetes cluster. Some Kubernetes distributions use wildcards DNS records to link a family of host names to the same Kubernetes cluster. A wildcard DNS record is a DNS record that, given a parent wildcard domain, maps all its subdomains to a single IP. For example, a wildcard DNS record migh map the wildcard domain *.example.com to the IP 10.0.0.8. DNS requests for subdomains such as hello.example.com or myapp.example.com will obtain 10.0.0.8 as a response.
+
+The following is an example of an ingress resource.
+
+```yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello #The name of the ingress resource
+spec:
+  rules:
+    - host: hello.example.com #The host name used by external users to access the application
+      http:
+        paths:
+          - path: / #This value is used in combination with pathType to determine if the URL request matches any of the accepted paths. A path value of / with the pathType value of Prefix is the equivalent of a wildcard that matches any path
+            pathType: Prefix #This value is used in combination with path to determine if the URL matches any of the accepted paths. A pathType of Prefix offers a bit more flexibility allowing for matches where the path and the requested URL can contain either a trailing / or not. A pathType of Exact requires the requested URL to exactly match the path value.
+            backend:
+              service:
+                name: hello #The name of the service to which requests are redirected
+                port:
+                  number: 8080 #The port number on which the service listens
+```
+
+# Testing the Ingress
+
+If there is an application already running in the Kubernetes cluster, then the ingress resource can be tested by verifying the external access to the application. The test checks that the ingress resource successfully configures with the ingress controller to redirect the HTTP or HTTPS request.
+
+After using either the kubectl create command or the kubectl apply command to create an ingress resource, use a web browser to access the application URL.
+
+Optionally, the curl command can be used to perform simple tests.
+
+```bash
+curl hello.example.com
+# <html>
+#   <body>
+#     <h1>Hello, world from nginx!</h1>
+#   </body>
+# </html>
+```
+
+If the browser does not obtain the expected response, the verify the following items:
+
+- The host name and paths are the ones used in the ingress resource.
+- The system can translate the host name to the IP address for the ingress controller (via the host file or a DNS entry)
+- The ingress resource is available and its information is correct.
+- If applicable, verify that the ingress controller is installed and running in the cluster.
