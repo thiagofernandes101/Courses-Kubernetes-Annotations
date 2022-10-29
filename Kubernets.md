@@ -795,3 +795,84 @@ If the browser does not obtain the expected response, the verify the following i
 - The system can translate the host name to the IP address for the ingress controller (via the host file or a DNS entry)
 - The ingress resource is available and its information is correct.
 - If applicable, verify that the ingress controller is installed and running in the cluster.
+
+# Example: Exposing applications for external access using ingress resources
+
+1. Deploy a sample hello application. The hello app displays a greeting and its local IP address. When running under Kubernetes, this is the IP address assigned to its pod. Create a new deployment named hello that uses the container image at quay.io/redhattraining/do100-hello-ip:v1.0-external in the username-dev namespace. Configure the deployment to use three pods.
+
+- Create the hello deployment with three replicas. Use the container image located at quay.io/redhattraining/do100-hello-ip:v1.0-external. This container image simply displays the IP address of its associated pod.
+
+```bash
+kubectl create deployment hello --image quay.io/redhattraining/do100-hello-ip:v1.0-external --replicas=3
+> deployment.apps/hello created
+```
+
+- Run the kubectl get pods -w command to verify that three pods are running.
+
+```bash
+kubectl get pods -w
+> NAME                     READY   STATUS    RESTARTS   AGE
+> hello-7c78dd5b47-5sqmz   1/1     Running   0          86s
+> hello-7c78dd5b47-djp6k   1/1     Running   0          86s
+> hello-7c78dd5b47-wtdkp   1/1     Running   0          86s
+```
+
+- Create a service for the hello deployment that redirects to pod port 8080. Run the kubectl expose command to create a service that redirects to the hello deployment. Configure the service to listen on port 8080 and redirect to port 8080 within the pod.
+
+```bash
+kubectl expose deployment hello --port=8080
+> service/hello exposed
+
+kubectl get service/hello
+> NAME    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+> hello   ClusterIP   10.96.40.164   <none>        8080/TCP   64s
+```
+
+> The IP associated to the service is private to the Kubernetes cluster. It can't be accessed directly.
+
+2. Create an ingress resource that directs external traffic to the hello service.
+
+- Create a file in the current directory named ingress-hello.yml. Create the ingress-hello.yml file with the following content. Ensure correct indentation (using spaces rather than tabs).
+
+```yml
+# YAML file used
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello
+  labels:
+    app: hello
+spec:
+  rules:
+    - host: hello.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hello
+                port:
+                  number: 8080
+```
+
+```bash
+kubectl create -f ingress-hello.yml
+> ingress.networking.k8s.io/hello created
+```
+
+- Display the information about the hello ingress. If the command does not display an IP address, then wait up to a minute and try running the command again.
+
+```bash
+kubectl get ingress/hello
+> NAME    CLASS   HOSTS               ADDRESS        PORTS   AGE
+> hello   nginx   hello.example.com   192.168.49.2   80      2m22s
+```
+
+> The value in the HOST column matches the host line specified in the ingress-hello.yml file.
+
+3. Verify that the ingress resource successfully provides access to the hello service and the pods associated with the service.
+
+- Access the domain name specifies by the ingress resource. Use the curl command to access the domain name associated to the ingress controller. Note that the IP varies by repeating the curl command.
+
+> To make this work, the host described in the yaml file must be configured, in my case, on windows. To do this, go to the host file <ins>C:\Windows\System32\drivers\etc\host</ins>, open the file as administrator and configure the host ip.
