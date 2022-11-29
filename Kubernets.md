@@ -220,11 +220,11 @@ In this case, each pod can container multiple containers and one container och o
 
 With that in mind, to create a pod with an image, the following commands can be executed.
 
-> OBS: Before executing the commands to create an image, make sure the kubectl is configured to use minikube (in case it is not just run <ins>minukube start</ins>) and the kubectl context refers to the user-dev by running <ins>kubectl config set-context --current --namespace=[your user]-dev</ins>
+> OBS: Before executing the commands to create an image, make sure the kubectl is configured to use minikube (in case just run <ins>minukube start</ins>) and that it refers to the context [user]-dev by running <ins>kubectl config set-context --current --namespace=[your user]-dev</ins>
 >
 > In case the namespaces are not know (probably forgotten), then run the command <ins>kubectl config get-contexts</ins>
 >
-> If everything is alright, then the command to show kubernetes pods should show the message that no resources were found in the user namespace
+> If everything is alright, then the <ins>kubectl get pods</ins> command should show the message that no resources were found in the user namespace
 >
 > ``` bash
 > kubectl get pods
@@ -876,3 +876,378 @@ kubectl get ingress/hello
 - Access the domain name specifies by the ingress resource. Use the curl command to access the domain name associated to the ingress controller. Note that the IP varies by repeating the curl command.
 
 > To make this work, the host described in the yaml file must be configured, in my case, on windows. To do this, go to the host file <ins>C:\Windows\System32\drivers\etc\host</ins>, open the file as administrator and configure the host ip.
+
+# **Limiting resource usage**
+
+# Defining resource requests and limits for pods
+
+A pod definition can include both resource request and resource limits:
+
+- **Resource request:** used for scheduling and indicating that a pod cannot run with less than the specified amount of compute resources. The scheduler tries to find a node with sufficient compute resource to satisfy the requests.
+
+- **Resource limits:** used to prevent a pod from using up all compute resources from a node. The code that runs a pod configures the Linux kernel cgroups feature to enforce the pod's resource limits.
+
+Each container should define resource requests and resource limits in a deployment. If not, then the deployment definition will include a <ins>resources:{}</ins> line for each container.
+
+Modify the <ins>resources:{}</ins> line to specify the desired requests and or limits. For example:
+
+```yaml
+#...output omitted...
+      spec:
+        containers:
+        - image: quay.io/redhattraining/hello-world-nginx:v1.0
+          name: hello-world-nginx
+          resources:
+            requests:
+              cpu: "10m"
+              memory: 20Mi
+            limits:
+              cpu: "80m"
+              memory: 100Mi
+status: {}
+```
+
+The following command sets the same requests and limits as the proceding example.
+
+```bash
+kubectl set resources deployment hello-world-nginx --requests cpu=10m,memory=20Mi --limits cpu=80m,memory=100Mi
+```
+
+If a resource quota applies to a resource request, then the pod should define a resource request. If a resource quota applies to a resource limit, then the pod should also define a resource limit. Even without quotas, resource requests and limits should be specified.
+
+# Viewing requests, limits and actual usage
+
+Using the Kubernetes command-line interface, cluster administratos can view compute usage information for individual nodes. The kubectl describe node command displays detailed information about a node, including information about the pods running on the node. For each pod, it shows CPU and memory requests, as well as limits for each. If a request or limit is not specified, then the pod shows a 0 for that column. A summary of all resources requests and limits is also displayed.
+
+```bash
+kubectl describe node node1.us-west-1.compute.internal
+
+> Name: node1.us-west-1.compute.internal
+> Roles: worker
+> Labels: beta.kubernetes.io/arch=amd64
+>  beta.kubernetes.io/instance-type=m4.xlarge
+>  beta.kubernetes.io/os=linux
+> ...output omitted...
+> Non-terminated Pods: (20 in total)
+> ... Name CPU Requests ... Memory Requests Memory Limits AGE
+> ... ---- ------------ ... --------------- ------------- ---
+> ... tuned-vdwt4 10m (0%) ... 50Mi (0%) 0 (0%) 8d
+> ... dns-default-2rpwf 110m (3%) ... 70Mi (0%) 512Mi (3%) 8d
+> ... node-ca-6xwmn 10m (0%) ... 10Mi (0%) 0 (0%) 8d
+> ...output omitted...
+>  Resource Requests Limits
+>  -------- -------- ------
+>  cpu 600m (17%) 0 (0%)
+>  memory 1506Mi (9%) 512Mi (3%)
+> ...output omitted...
+```
+
+The <ins>kubectl describe node</ins> command displays requests and limits. The <ins>kubectl top</ins> command shows actual usage. For example, if a pod requests 10m of CPU, then the scheduler will ensure that it places the pod on a node with available capacity. Although the pod requested 10m of CPU, it might use more or less then this value, inless it is also constrained by a CPU limit. The <ins>kubectl top nodes</ins> command shows actual usage for one or more nodes in the cluster, and the <ins>kubectl top pods</ins> shows actual usage for each pod in a namespace.
+
+```bash
+kubectl top nodes -l node-role.kubernetes.io/worker
+> NAME CPU(cores) CPU% MEMORY(bytes) MEMORY%
+> node1.us-west-1.compute.internal 519m 14% 3126Mi 20%
+> node2.us-west-1.compute.internal 167m 4% 1178Mi 7%
+```
+
+# Applying quotas
+
+Kubernetes can enforce that track and limit the use of two kind of resources:
+
+- **Object counts** The number of Kubernetes resources, such as pods, services and routes.
+- **Compute resources** The number of physical or virtual hardware resources, such as CPU, memory and storage capacity.
+
+Imposing a quota on the number of Kubernetes resources avoids exhausting other limited software resources, such as IP addresses for services.
+
+Similarly, imposing a quota on the amount of compute resource avoids exhausting the capacity of a single node in a Kubernetes cluster. It also prevents one application from starving other applications of resources.
+
+Kubernetes manages resource quotas by using a ResourceQuota or quota resource. A quota specifies hard resource usage limits for a namespace. All attributes of a quota are optional, meaning that any resource that is not restricted by a quota can be consumed without bounds.
+
+> Althout a single quota resource can define all the quotas for a namespace, a namespace can also contain multiple quotas. For example, one quota resource might limit compute resources, such as total CPU allowed or total memory allowed. Another quota resource might limit object counts, such as the number of pods allowed or the number of services allowed. The effect of multiple quotas is cumulative, but is expected that two different ResourceQuota resources for the same namespace do not limit the use of the same type of Kubernetes or compute resource. For example, two different quotas in a namespace should not both attempt to limit the maximum number of pods allowed.
+
+The following table describes some resources that a quota can restrict by their count or number:
+
+> | Resource Name          	| Quota Description                        	|
+> |------------------------	|------------------------------------------	|
+> | pods                   	| Total number of pods                     	|
+> | replicationcontrollers 	| Total number of replication controllers  	|
+> | services               	| Total number of services                 	|
+> | secrets                	| Total number of secrets                  	|
+> | presistentvolumeclaims 	| Total number of persistent volume claims 	|
+
+The following table describes some compute resources that can be restricted by a quota:
+
+> | Compute Resource Name    	| Quota Description                                                        	|
+> |--------------------------	|--------------------------------------------------------------------------	|
+> | cpu (requests.cpu)       	| Total CPU use across all containers                                      	|
+> | memory (requests.memory) 	| Total memory use across all containers                                   	|
+> | storage                  	| Total storage requests by containers across all persistent volume claims 	|
+
+Quota attributes can track either resource requests or resource limits for all pods in the namespace. By default, quota attributes track resource requests. Instead, to track resource limits, prefix the compute resource name with limits, for example, limits.cpu.
+
+The following listing shows a ResourceQuota resource defined using YAML syntax. This example specifies quotas for both the number of resources and the use of compute resources:
+
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: dev-quota
+spec:
+  hard:
+    services: "10"
+    cpu: "1300m"
+    memory: "1.5Gi"
+```
+
+Resource units are the same for pod resource requests and resource limits. For example, <ins>Gi</ins> means <ins>GiB</ins>, and <ins>m</ins> means <ins>milicores</ins>. One milicore is the equivalent to 1/1000 of a single CPU core.
+
+Resource quotas can be created in the same way as any other Kubernetes resource; that is, by passing a YAML or JSON resource definition file to the kubectl create command:
+
+```bash
+kubectl create --save-config -f dev-quota.yml
+```
+
+Another way to create a resource quota is by using the <ins>kubectl create quota</ins> command, for example:
+
+```bash
+kubectl create quota dev-quota --hard services=10,cpu=1300,memory=1.5Gi
+```
+
+Use the <ins>kubectl get resourcequota</ins> command to list available quotas, and use the kubectl describe resourcequota command to view usage statistics related to any hard limits defined in the quita, for example:
+
+```bash
+kubectl get resourcequota
+
+> NAME AGE REQUEST
+> compute-quota 51s cpu: 500m/10, memory: 300Mi/1Gi ...
+> count-quota 28s pods: 1/3, replicationcontrollers: 1/5, services: 1/2 ...
+```
+
+Without arguments, the kubectl describe quota command displays the cumulative limits set for all ResourceQuota resources in the namespace:
+
+```bash
+kubectl describe quota
+
+> Name: compute-quota
+> Namespace: schedule-demo
+> Resource Used Hard
+> -------- ---- ----
+> cpu 500m 10
+> memory 300Mi 1Gi
+> Name: count-quota
+> Namespace: schedule-demo
+> Resource Used Hard
+> -------- ---- ----
+> pods 1 3
+> replicationcontrollers 1 5
+> services 1 2
+```
+
+An active quota can be deleted by name using the kubectl delete command:
+
+```bash
+kubectl delete resourcequota QUOTA
+```
+
+When a quota is first created in a namespace, the namespace restricts the ability to create any new resources that might violate a quota constraint until it has calculates updated usage statistics. After a quota is created and usage statistics are up-to-date, the namespace accepts the creation of new resources. When creating a new resource, the quota usage immediately increments. When deleting a resource, the quota use decrements during the next full recalculation of quota statistics for the namespace.
+
+Quotas are applied to new resources, but they do not affect existing resources. For example, if you create a quota to limit a namespace to 15 pods, but 20 pods are already running, then the quota will not remove the additional 5 pods that exceed the quota.
+
+> ResourceQuota constraints are applied for the namespace as a whole, but many Kubernetes processes, such as builds and deployments, create pods inside the namespace and might fail because starting them would exceed the namespace quota.
+
+If a modification a namespace exceeds the quota for a resource count, then Kubernetes denies the action and returns an appropriate error message to the user. However, if the modification exceeds the quota for a compute resource, then the operation does not fail immediately; Kubernetes retries the operation several times, giving the administrator an oportunity to increase the quota or to perform another corrective action, such as bringing a new node online.
+
+> If a quota that restricts usage of compute resources for a namespace is set, then Kubernetes refuses to create pods that do not specify resource requests or resource limits for that compute resource. To use most templates and builders with a namespace restricted by quotas, the namespace must also contain a limit range resource that specifies default values for container resource requests.
+
+# Applying limite ranges:
+
+A limitRange resource defines the default, minimum, and maximum values for compute resource requests, and the limits for a single pod or container defined inside the namespace. A resource request or limit for a pod is the sum of its containers.
+
+To understand the difference between a limit range and a resource quota, consider that a limit range defines valid range and default values for a single pod, and a resource quota defines only top values for the sum of all pods in a namespace.
+
+A limit range resource can also define default, minimum and maximum values for the storage capacity requested by an image, image stream, or persistent volume claim. If a resource that is added to a namespace does not provide a compute resource request, then it takes the default value provided by the limit ranges for the namespace. If a new resource provides compute resource requests or limits that are smaller than the minimum specified by the namespace limit ranges, then the resource is not created. Similarly, if a new resource provides compute resource requests or limits that are higher than the maximum specified by the namespace limit ranges, then the resource is not created. The following listing shows a limit range defined using YAML syntax:
+
+``` yaml
+apiVersion: "v1"
+kind: "LimitRange"
+metadata:
+  name: "dev-limits"
+spec:
+  limits:
+  - type: "Pod"
+    max: #The maximum amount of CPU and memory that all containers within a pod can consume. A new pod that exceeds the maximum limits is not created. An existing pod that exceeds the maximum limits is restarted.
+      cpu: "500m"
+      memory: "750Mi"
+    min: #The minimum amount of CPU and memory consumed across all containers within a pod. A pod that does not satisfy the minimum requirements is not created. Because many pods only have one container, the minimum pod values can be the same as the minimum container values.
+      cpu: "10m"
+      memory: "5Mi"
+  - type: "Container"
+    max: #The maximum amount of CPU and memory that an individual container within a pod can consume. A new container that exceeds the maximum limits does not create the associated pod. An existing container that exceeds the maximum limits restarts the entire pod.
+      cpu: "500m"
+      memory: "750Mi"
+    min: #The minimum amount of CPU and memory that an individual container within a pod can consume. A container that does not satisfy the minimum requirements prevents the associated pod from being created.
+      cpu: "10m"
+      memory: "5Mi"
+    default: #The default maximum amount of CPU and memory that an individual container can consume. This is used when a CPU resource limit or a memory limit is not defined for the container.
+      cpu: "100m"
+      memory: "100Mi"
+    defaultRequest: #The default CPU and memory and individual container requests. This default is used when a CPU resource request or a memory request is not defined for the container. If CPU and memory quotas are enabled for a namespace, then configuring the "defaultRequest" section allows pods to start, even if the containers do not specify resource requests.
+      cpu: "20m"
+      memory: "20Mi"
+  - type: "PersistentVolumeClaim" #The minimum and maximum sizes for a persistent volume claim.
+    min:
+      storage: "1Gi"
+    max:
+      storage: "50Gi"
+```
+
+Users can create a limit range resource in the same way as any other Kubernetes resource, that is, by passing a YAML or JSON resource definition file to the <ins>kubectl create</ins> command.
+
+```bash
+kubectl create --save-config -f dev-limits.yml
+```
+
+To view the limit constraints enforced in a namespace, the command <ins>kubectl describe limitrange</ins> can be used.
+
+```bash
+kubectl describe limitrange dev-limits
+
+> Name: dev-limits
+> Namespace: schedule-demo
+> Type Resource Min Max Default Request ...
+> ---- -------- --- --- --------------- ...
+> Pod cpu 10m 500m - ...
+> Pod memory 5Mi 750Mi - ...
+> Container memory 5Mi 750Mi 20Mi ...
+> Container cpu 10m 500m 20m ...
+> PersistentVolumeClaim storage 1Gi 50Gi - ...
+```
+
+An active limit range can be deleted by name with the <ins>kubectl delete</ins> command.
+
+```bash
+kubectl delete limitrange dev-limits
+```
+
+After a limit range is created in a namespace, all requests to create new resources are evaluated against each limit range resource in the namespace. If the new resource violates the minimum or maximum constraint enumerated by any limit range, then the resource is rejected. If the new resource does not set an explicit value, and the constraint supports a default value, then the default value is applied to the new resource as its usage value.
+
+All resource update requests are also evaluated against each limit range resource in the namespace. If the updated resource violates any constraint, then the update is rejected.
+
+> Avoid setting <ins>LimitRage</ins> constraints that are too high, or <ins>ResourceQuota</ins> constraints that are too low. A violation of LimitRange constraint prevents the creation of a pod resulting in error messages. A violation of ResourceQuota constraints prevents a pod from being scheduled to any node. The pod might be created but remain in the pending state.
+
+# Example: Limiting resource usage
+
+1. Deploy a test application that explicitly requests container resources for CPU and memory.
+
+- Create a deployment resource file and save it to a file named hello-limit.yaml. Name the application hello-limit and use the container image located at <ins>quay.io/redhattraining/hello-world-nginx:v1.0</ins>.
+
+```bash
+kubectl create deployment hello-limit --image quay.io/redhattraining/hello-world-nginx:v1.0 --dry-run=client -o yaml > hello-limit.yaml
+
+> apiVersion: apps/v1
+> kind: Deployment
+> metadata:
+>   creationTimestamp: null
+>   labels:
+>     app: hello-limit
+>   name: hello-limit
+> spec:
+>   replicas: 1
+>   selector:
+>     matchLabels:
+>       app: hello-limit
+>   strategy: {}
+>   template:
+>     metadata:
+>       creationTimestamp: null
+>       labels:
+>         app: hello-limit
+>     spec:
+>       containers:
+>       - image: quay.io/redhattraining/hello-world-nginx:v1.0
+>         name: hello-world-nginx
+>         resources: {}
+> status: {}
+```
+
+- Edit the file hello-limit.yaml to replace the <ins>resources: {}</ins> line with the highlighted lines below. Ensure the proper identation before saving the file.
+
+```yaml
+...output omitted...
+    spec:
+      containers:
+      - image: quay.io/redhattraining/hello-world-nginx:v1.0
+        name: hello-world-nginx
+        resources:
+          requests:
+            cpu: "8"
+            memory: 20Mi
+status: {}
+```
+
+- Create a new application using the recently created resource file.
+
+```bash
+kubectl create --save-config -f hello-limit.yaml
+> deployment.apps/hello-limit created
+
+kubectl get deployment
+> NAME          READY   UP-TO-DATE   AVAILABLE   AGE
+> hello-limit   1/1     1            1           18s
+
+kubectl get pods
+> NAME                           READY   STATUS    RESTARTS   AGE
+> hello-limit-56fb888867-52cd8   1/1     Running   0          37s
+```
+
+> On docker, there wasn't any problem making a new deployment (at least to me). However the application pod can have a "Pending" status showed by the <ins>kubectl get pods</ins> command.
+
+```bash
+kubectl get pods
+> NAME READY STATUS RESTARTS AGE
+> hello-limit-d86874d86b-fpmrt 0/1 Pending 0 10s
+```
+
+>  In this case, the problem is probably because the pod cannot be customized since none of the nodes have sufficient CPU resources. This can be verified by viewing warning events
+
+```base
+> kubectl get events --field-selector type=Warning
+> LAST SEEN TYPE REASON OBJECT MESSAGE
+> 88s Warning FailedScheduling pod/hello-limit-d86874d86b-fpmrt 0/3 nodes are available: 8 Insufficient cpu.
+```
+
+2. Deploy the application so that it requests fewer CPU resources.
+
+- Edit the hello-limit.yaml file to request 1.2 CPUs for the container. Change the <ins>cpu: "8"</ins> line to match the highlighted line below:
+
+```yaml
+        resources:
+          requests:
+            cpu: "1200m"
+            memory: 20Mi
+```
+
+- Apply the changes to the application
+
+```bash
+kubectl apply -f hello-limit.yaml
+> deployment.apps/hello-limit configured
+```
+
+- Verify the application deploys successfully.
+
+```bash
+kubectl get pods
+> NAME                           READY   STATUS    RESTARTS   AGE
+> hello-limit-6bd75b6c9d-jjjn6   1/1     Running   0          26s
+```
+
+3. Delete the created resources to clean your cluster.
+
+```bash
+kubectl delete -f hello-limit.yaml
+> deployment.apps "hello-limit" deleted
+
+rm hello-limit.yaml
+```
